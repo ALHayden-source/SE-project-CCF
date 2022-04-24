@@ -1,0 +1,19 @@
+﻿@page "/account"
+
+@using data
+@using BlazorServer.Models
+@inject IDataAccess _data
+@inject IConfiguration _config
+
+<h3> Account</h3>
+@code 
+{
+    List<BankModel> bank;
+
+    //once page is rendered then lets load the data to put it on the page
+    protected override async Task OnInitializedAsync()
+    {
+        string sql = "select * from people";
+        bank = await _data.LoadData(sql, new { }, _congig.GetConnectionString"default");
+    }
+}
