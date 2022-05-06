@@ -1,0 +1,74 @@
+﻿@using DataLibrary
+@using BlazorApp4.Models
+@using Microsoft.Extensions.Configuration
+@using Microsoft.AspNetCore.Components.Authorization
+@inject NavigationManager Navigation
+@inject TokenProvider TokenProvider
+@inject NavigationManager uriHelper;
+@inject IDataAccess _data
+@inject IConfiguration _config
+
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+  <a class="navbar-brand" href="#">Fraudcard</a>
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  <div class="collapse navbar-collapse" id="navbarNav">
+    <ul class="navbar-nav">
+       @if (account == null)
+            {
+             <li class="nav-item px-3">
+            <a class="nav-link" href="#">No Account</a>
+                </li>
+            }  
+            else
+            {
+                    @foreach (var p in account)
+                    {
+                         <NavLink class="nav-link" @onclick="args =>  NavigateTo(p.AccountID )"   > 
+                         <span class="oi oi-list-rich" aria-hidden="true"></span> Account @p.AccountID 
+                         </NavLink>
+                         
+                    }
+            }
+       <LoginDisplay/>
+            
+    </ul>
+  </div>
+</nav>
+
+   
+@code {
+    //private string? name { get; set; }
+    int id = 0;
+    string accountnum;
+    List<PersonModel> people;
+    List<AccountModel> account;
+    List<TransactionModels> transactions;
+    [CascadingParameter] private Task<AuthenticationState> authenticationStateTask { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await authenticationStateTask;
+        var user = authState.User;
+
+        if (user.Identity.IsAuthenticated)
+        {
+            Console.WriteLine($"{user.Identity.Name} is authenticated.");
+
+        }
+        string sql = "select username, customerID from customer where username = \"" + user.Identity.Name + "\";";        
+        people = await _data.LoadData<PersonModel, dynamic>(sql, new { }, _config.GetConnectionString("default"));
+        int id = people[0].CustomerID;
+        string sql2 = "select * from account where customer_CustomerID = " + id + ";";        
+        account = await _data.LoadData<AccountModel, dynamic>(sql2, new { }, _config.GetConnectionString("default"));  
+        string sql3 = "select * from transactions where account_AccountID = " + account[0].AccountID.ToString() + ";";        
+        transactions = await _data.LoadData<TransactionModels, dynamic>(sql3, new { }, _config.GetConnectionString("default"));
+        accountnum = account[0].AccountID.ToString();
+
+    }
+    void NavigateTo(int id)
+    {
+             uriHelper.NavigateTo("/account/"+id, forceLoad: true);    }
+    }

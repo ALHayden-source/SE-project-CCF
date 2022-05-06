@@ -1,0 +1,43 @@
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@inject NavigationManager Navigation
+@inject TokenProvider TokenProvider
+
+@*Things needed to use Bank DB*@
+@using DataLibrary
+@using BlazorApp4.Models
+@using Microsoft.Extensions.Configuration
+@inject IDataAccess _data
+@inject IConfiguration _config
+
+<AuthorizeView>
+    <Authorized>
+      
+      
+      <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+          Hello, @context.User.Identity.Name!
+        </a>
+
+        <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+
+            <a class="dropdown-item" href="Identity/Account/Manage">Settings</a>    
+            <a class="dropdown-item" href="manageaccount">Manage your accounts</a>    
+            <a class="dropdown-item"> 
+            <form action="/Identity/Account/Logout?returnUrl=%2F" method="post">           
+            <button class="nav-link btn btn-link" type="submit">Logout</button>
+            <input name="__RequestVerificationToken" type="hidden"
+            value="@TokenProvider.XsrfToken">
+            </form></a>     
+            
+        </div>
+      </li>
+
+
+
+
+    </Authorized>
+    <NotAuthorized>
+        <a href="Identity/Account/Register">Register</a>
+        <a href="Identity/Account/Login">Login</a>
+    </NotAuthorized>
+</AuthorizeView>
