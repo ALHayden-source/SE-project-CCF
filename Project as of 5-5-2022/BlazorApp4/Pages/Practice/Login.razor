@@ -1,0 +1,79 @@
+﻿@page "/account/login"
+
+@using DataLibrary
+@using BlazorApp4.Models
+@using Microsoft.Extensions.Configuration
+@inject IDataAccess _data
+@inject IConfiguration _config
+@inject NavigationManager _nav
+
+<h3>Log In</h3>
+
+<EditForm Model="@logindetails" OnValidSubmit="@submitlogin">
+    <DataAnnotationsValidator/>
+    <ValidationSummary/>
+
+@*Input Text for Username*@
+<div class = "col-12 row">
+    <label class = "col-2 font-weight-bold">username :</label>
+   <InputText class="form-check-control col-3" @bind-Value="logindetails.Username" placeholder="username"/>
+   @*<input types = ""*@
+</div>
+
+@*Input Text for Password*@
+
+
+<div class = "col-12 row">
+    <label class = "col-2 font-weight-bold">password :</label>
+     <InputText class="form-check-control col-3" @bind-Value="logindetails.Password" placeholder="password"/>
+</div>
+
+@*Buttons to Loging*@
+<div class = "col-12 row">
+    <span class= "col-2"></span>
+    <input type="submit" class="form-control col-1 btn btn-primary" value="Submit" />
+   
+</div>
+
+</EditForm>
+
+
+
+@code {
+
+    //connect to database
+    //have a text entry
+    //have a submit text entry
+    //compare all the data submitted to database
+    //validate
+    //correct go to display account info
+
+    //Values to compare from database to login
+    public LogInModel logindetails { get; set; }
+    List<CustomerModel> people;
+    private async Task submitlogin ()
+    {
+            string details = logindetails.Username;
+            //Select * FROM customer where  CAST(AES_DECRYPT(Password, "key") AS CHAR) = "food01*";
+            string sql = "select Username from customer WHERE Username = \""+logindetails.Username+"\" AND  CAST(AES_DECRYPT(\""+logindetails.Password+"\", \"key\") AS CHAR);";
+            //await _data.SaveData(sql, new { }, _config.GetConnectionString("default"));
+
+            if (people.Count!=0)
+            {
+                _nav.NavigateTo("/about");
+            }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+          
+        logindetails = new LogInModel();
+         string sql = "select Username from customer";
+
+         people = await _data.LoadData<CustomerModel, dynamic>(sql, new { }, _config.GetConnectionString("default"));
+        
+    } 
+
+}
+
+

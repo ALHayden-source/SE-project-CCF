@@ -1,0 +1,83 @@
+﻿@page "/account/createaccount"
+
+@using DataLibrary
+@using BlazorApp4.Models
+@using Microsoft.Extensions.Configuration
+@inject IDataAccess _data
+@inject IConfiguration _config
+@inject NavigationManager _nav
+
+<h3>Log In</h3>
+
+<EditForm Model="@logindetails" OnValidSubmit="@create">
+    <DataAnnotationsValidator/>
+    <ValidationSummary/>
+
+@*Input Text for First Name*@
+<div class = "col-12 row">
+    <label class = "col-2 font-weight-bold">First Name :</label>
+   <InputText class="form-check-control col-3" @bind-Value="logindetails.FirstName" placeholder="firstname"/>
+</div>
+
+@*Input Text for Last Name*@
+
+
+<div class = "col-12 row">
+    <label class = "col-2 font-weight-bold">Last Name :</label>
+     <InputText class="form-check-control col-3" @bind-Value="logindetails.LastName" placeholder="lastname"/>
+</div>
+
+@*Input Text for Email Address*@
+<div class = "col-12 row">
+    <label class = "col-2 font-weight-bold">username :</label>
+   <InputText class="form-check-control col-3" @bind-Value="logindetails.Username" placeholder="username"/>
+</div>
+
+@*Input Text for Password*@
+
+
+<div class = "col-12 row">
+    <label class = "col-2 font-weight-bold">password :</label>
+     <InputText class="form-check-control col-3" @bind-Value="logindetails.Password" placeholder="password"/>
+</div>
+
+
+@*Buttons to Loging*@
+<div class = "col-12 row">
+    <span class= "col-2"></span>
+    <input type="submit" class="form-control col-1 btn btn-primary" value="Create Account" />
+   
+</div>
+
+</EditForm>
+
+
+@code 
+{
+    public CreateAccountModel logindetails { get; set; }
+    List<CustomerModel> people;
+
+    private async Task create ()
+    {
+        {
+           //aes_encrypt("food01*","key")
+           
+        string sql = "insert into customer (FirstName, LastName,Username,Password) values (\""+logindetails.FirstName+"\", \""+logindetails.LastName + "\", \""+logindetails.Username +"\", aes_encrypt(\""+logindetails.Password+"\",\"key\"));";
+
+            people = await _data.LoadData<CustomerModel, dynamic>(sql, new { }, _config.GetConnectionString("default"));  
+                _nav.NavigateTo("/about");
+          
+
+        }       
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+          
+        logindetails = new CreateAccountModel();
+        
+    } 
+
+}
+
+

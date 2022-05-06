@@ -1,0 +1,124 @@
+﻿@page "/account/"
+@page "/account/{accountnumber:int}"
+@using DataLibrary
+@using BlazorApp4.Models
+@using Microsoft.Extensions.Configuration
+@inject IDataAccess _data
+@inject IConfiguration _config
+@inject NavigationManager uriHelper;
+
+    <NavMenuSideBar />
+
+
+
+    @if (account == null)
+            {
+             <li class="nav-item">
+            <a class="nav-link" href="#">No Account</a>
+                </li>
+            }  
+            else
+            {
+                <h1>Account #@accountnum</h1>
+                <table class="table">
+                <thead>
+                <tr>
+                 <th>Suspicious</th>
+                <th>Transaction Amount</th>
+                <th>Business Name</th>
+                <th>Business Location</th>
+                <th>Charge Type</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var p in transactions)
+                {
+                <tr>
+                 @if (@p.Safety == "s")
+                    {
+                        <td> <button type="button" class=@safe @onclick="args =>  SwitchToWarning(p.TransactionID, p.TAccountID )" >Success</button>   </td>
+                    }
+                    else
+                    {
+                         <td> <button type="button" class=@danger  @onclick="args =>  SwitchToSafety(p.TransactionID, p.TAccountID )" >Success</button>   </td>
+                    }
+                 
+                <td>@p.TransactionAmount</td>
+                <td>@p.BusinessName</td>
+                <td>@p.BusinessLocation</td>
+                <td>@p.ChargeType</td>
+                </tr>
+                }
+                </tbody>
+                </table>
+             }
+
+   
+@code {
+
+    //btn colors
+
+    //private string? name { get; set; }
+    [Parameter]
+    public int accountnumber { get; set; }
+
+
+    string safe ="btn btn-success";
+    string danger = "btn alert-danger";
+    int id = 0;
+    int accountnum;
+    List<PersonModel> people;
+    List<AccountModel> account;
+    List<TransactionModels> transactions;
+    [CascadingParameter] private Task<AuthenticationState> authenticationStateTask { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        accountnum = accountnumber;
+        var authState = await authenticationStateTask;
+        var user = authState.User;
+
+        if (user.Identity.IsAuthenticated)
+        {
+            Console.WriteLine($"{user.Identity.Name} is authenticated.");
+        }
+        string sql = "select username, customerID from customer where username = \"" + user.Identity.Name + "\";";        
+        people = await _data.LoadData<PersonModel, dynamic>(sql, new { }, _config.GetConnectionString("default"));
+        int id = people[0].CustomerID;
+        string sql2 = "select * from account where customer_CustomerID = " + id + ";";        
+        account = await _data.LoadData<AccountModel, dynamic>(sql2, new { }, _config.GetConnectionString("default"));  
+       if (accountnum==null||accountnum ==0)
+        {
+               accountnum = account[0].AccountID;
+        }
+        string sql3 = "select * from transactions where account_AccountID = " + accountnum.ToString() + ";";
+
+       
+        transactions = await _data.LoadData<TransactionModels, dynamic>(sql3, new { }, _config.GetConnectionString("default"));
+     
+
+    }
+      private async Task LoadTransactions(int id)
+    {
+        string sql = "select * from transations where account_AccountID = " + id + ";";        
+        transactions = await _data.LoadData<TransactionModels, dynamic>(sql, new { }, _config.GetConnectionString("default"));  
+
+        await OnInitializedAsync();
+    }
+
+     private async Task SwitchToWarning(int id, int state)
+    {
+        string sql = "update transactions set safety = \"w\" where transactionID= "+id+";";
+
+        await _data.SaveData(sql, new {}, _config.GetConnectionString("default"));
+            uriHelper.NavigateTo("/account/"+state, forceLoad: true);   
+    }
+        private async Task SwitchToSafety(int id, int state)
+    {
+        string sql = "update transactions set safety = \"s\" where transactionID= "+id+";";
+
+        await _data.SaveData(sql, new {}, _config.GetConnectionString("default"));
+            uriHelper.NavigateTo("/account/"+state, forceLoad: true);   
+    }
+
+}

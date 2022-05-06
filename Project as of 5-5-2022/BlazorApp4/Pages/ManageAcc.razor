@@ -1,0 +1,106 @@
+﻿@page "/manageaccount"
+
+@using DataLibrary
+@using BlazorApp4.Models
+@using Microsoft.Extensions.Configuration
+@inject IDataAccess _data
+@inject IConfiguration _config
+
+<h1>Manage your account</h1>
+
+
+  @if (account == null)
+            {
+             <li class="nav-item">
+            <a class="nav-link" href="#">No Account</a>
+                </li>
+            }  
+            else
+            {
+                <table class="table">
+                <thead>
+                <tr>
+                 <th>Account ID</th>
+                <th>Account Balence</th>
+                <th>Account Type</th>
+                <th>Edit</th>
+                <th>Remove</th>
+
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var p in account)
+                {
+                <tr>
+                 <td>@p.AccountID</td>
+                <td>@p.AccountBalance</td>
+                <td>@p.AccountType</td>   
+                <td><button type="button" class="btn btn-light" @onclick="args =>  DeleteData(p.AccountID )">Edit</button></td>
+                  <td><button type="button" class="btn btn-light" @onclick="args =>  DeleteData(p.AccountID )">Delete</button></td>
+                </tr>
+                }
+                </tbody>
+                </table>
+             }
+
+@code
+{
+
+    //connect to database
+    //have a text entry
+    //have a submit text entry
+    //compare all the data submitted to database
+    //validate
+    //correct go to display account info
+
+    List<PersonModel> people;
+    List<AccountModel> account;
+    List<TransactionModels> transactions;
+    [CascadingParameter] private Task<AuthenticationState> authenticationStateTask { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await authenticationStateTask;
+        var user = authState.User;
+
+        if (user.Identity.IsAuthenticated)
+        {
+            Console.WriteLine($"{user.Identity.Name} is authenticated.");
+        }
+        string sql = "select username, customerID from customer where username = \"" + user.Identity.Name + "\";";
+        people = await _data.LoadData<PersonModel, dynamic>(sql, new { }, _config.GetConnectionString("default"));
+        int id = people[0].CustomerID;
+        string sql2 = "select * from account where customer_CustomerID = " + id + ";";
+        account = await _data.LoadData<AccountModel, dynamic>(sql2, new { }, _config.GetConnectionString("default"));
+    }
+
+    private async Task InsertData()
+    {
+        string sql = "insert into people (FirstName, LastName) values (@FirstName, @LastName);";
+
+        await _data.SaveData(sql, new { FirstName = "Billy", LastName = "Bob" }, _config.GetConnectionString("default"));
+
+        await OnInitializedAsync();
+    }
+
+    private async Task UpdateData()
+    {
+        string sql = "update people set FirstName = @FirstName where LastName = @LastName";
+
+        await _data.SaveData(sql, new { FirstName = "Timothy", LastName = "Corey" }, _config.GetConnectionString("default"));
+
+        await OnInitializedAsync();
+    }
+
+    private async Task DeleteData(int id)
+    {
+        string sql = "delete from account where accountid = 20238;";
+
+        await _data.SaveData(sql, new { id }, _config.GetConnectionString("default"));
+
+        await OnInitializedAsync();
+    }
+
+ 
+
+}
